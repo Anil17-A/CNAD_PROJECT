@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    { "name": "Run platform + demo (local, no Docker)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/run_local.py", "console": "integratedTerminal", "justMyCode": true },
+    { "name": "Run demo only (exits when done)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/run_local.py", "args": ["--demo-only"], "console": "integratedTerminal" },
+    { "name": "Serve dashboard only", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/run_local.py", "args": ["--no-demo"], "console": "integratedTerminal" },
+    { "name": "Train early-warning model", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/ml/train_early_warning.py", "cwd": "${workspaceFolder}/ml", "console": "integratedTerminal" },
+    { "name": "Damage pipeline demo", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/ml/demo_segmentation.py", "console": "integratedTerminal" }
+  ]
+}

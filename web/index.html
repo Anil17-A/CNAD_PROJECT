@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disaster Response Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+ body{margin:0;font-family:system-ui,sans-serif;display:grid;grid-template-columns:1fr 380px;height:100vh}
+ #map{height:100vh} aside{padding:12px;overflow:auto;background:#f7f7f8}
+ h2{margin:8px 0;font-size:16px} .a{padding:8px;margin:6px 0;border-radius:6px;background:#fff;border-left:4px solid #e0a800;font-size:13px}
+ .a.CRITICAL{border-color:#c62828} .row{font-size:13px;margin:4px 0} button{padding:6px 10px;margin:2px}
+</style></head>
+<body>
+<div id="map"></div>
+<aside>
+ <h2>Controls</h2>
+ <button onclick="assess(1,62,0.81,0.35)">Assess Riverside (SI 62.3)</button>
+ <button onclick="assess(2,30,0.5,0.2)">Assess Old Town</button>
+ <button onclick="assess(5,45,0.6,0.3)">Assess Lakeside</button>
+ <button onclick="assess(7,75,0.9,0.4)">Assess Tech Park</button>
+ <button onclick="assess(8,20,0.7,0.1)">Assess Market Quarter</button>
+ <h2>Alerts</h2><div id="alerts"></div>
+ <h2>Dispatch plan</h2><div id="plan"></div>
+</aside>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API="http://localhost:8000/api", KEY="change-me-demo-key";
+const H={"x-api-key":KEY,"content-type":"application/json"};
+const map=L.map('map').setView([17.53,78.485],12);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+const centers={1:[17.515,78.445],2:[17.515,78.475],3:[17.545,78.445],4:[17.545,78.475],
+ 5:[17.515,78.505],6:[17.515,78.535],7:[17.545,78.505],8:[17.545,78.535]};
+const circles={};
+for(const id in centers) circles[id]=L.circle(centers[id],{radius:1100,color:'green'}).addTo(map);
+const colour=si=>si>=60?'red':si>=35?'orange':'green';
+
+async function get(p){const r=await fetch(API+p,{headers:H});return r.json()}
+async function assess(zone,d,e,a){
+  await fetch(API+"/damage/assess",{method:"POST",headers:H,
+    body:JSON.stringify({zone_id:zone,structural_damage_pct:d,population_exposure:e,access_difficulty:a})});
+  refresh();
+}
+async function refresh(){
+  try{
+    const al=await get("/alert/alerts");
+    document.getElementById("alerts").innerHTML=al.slice(0,8).map(a=>
+      `<div class="a ${a.level}"><b>${a.level}</b> Zone ${a.zone_id}<br>${a.message}</div>`).join("")||"No alerts";
+    const d=await get("/resource/dispatch");
+    d.zones.forEach(z=>circles[z.id].setStyle({color:colour(z.severity_index)})
+       .bindTooltip(`${z.name} - SI ${z.severity_index}`));
+    document.getElementById("plan").innerHTML=d.plan.slice(0,8).map(p=>
+      `<div class="row">${p.team} &rarr; <b>${p.zone}</b> (${p.route.path.join(" > ")}, ${p.route.minutes} min)</div>`).join("");
+  }catch(e){console.log(e)}
+}
+setInterval(refresh,3000); refresh();
+</script></body></html>

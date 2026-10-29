@@ -1,0 +1,74 @@
+services:
+  redpanda:
+    image: redpandadata/redpanda:v24.1.1
+    command: >
+      redpanda start --smp 1 --memory 512M --overprovisioned --node-id 0
+      --kafka-addr PLAINTEXT://0.0.0.0:9092 --advertise-kafka-addr PLAINTEXT://redpanda:9092
+      --mode dev-container
+    ports: ["9092:9092"]
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: disaster
+      POSTGRES_PASSWORD: disaster
+      POSTGRES_DB: disasterdb
+    ports: ["5432:5432"]
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U disaster -d disasterdb"]
+      interval: 5s
+      retries: 10
+
+  ingestion:
+    build: ./ingestion
+    env_file: .env
+    depends_on: [redpanda, postgres]
+    ports: ["8001:8000"]
+
+  prediction:
+    build: ./prediction
+    env_file: .env
+    depends_on: [redpanda]
+    ports: ["8002:8000"]
+
+  damage:
+    build: ./damage
+    env_file: .env
+    depends_on: [redpanda, postgres]
+    ports: ["8003:8000"]
+
+  resource:
+    build: ./resource
+    env_file: .env
+    depends_on: [postgres]
+    ports: ["8004:8000"]
+
+  alert:
+    build: ./alert
+    env_file: .env
+    depends_on: [redpanda, postgres]
+    ports: ["8005:8000"]
+
+  gateway:
+    build: ./gateway
+    env_file: .env
+    depends_on: [ingestion, prediction, damage, resource, alert]
+    ports: ["8000:8000"]
+
+  web:
+    image: nginx:alpine
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    ports: ["3000:80"]
+
+  simulator:
+    build: ./simulator
+    env_file: .env
+    depends_on: [redpanda]
+    profiles: ["demo"]
+
+volumes:
+  pgdata:

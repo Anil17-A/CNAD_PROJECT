@@ -1,0 +1,150 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: ingestion, namespace: disaster }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: ingestion } }
+  template:
+    metadata: { labels: { app: ingestion } }
+    spec:
+      containers:
+        - name: ingestion
+          image: disaster/ingestion:latest
+          imagePullPolicy: IfNotPresent
+          envFrom: [{ configMapRef: { name: app-config } }]
+          ports: [{ containerPort: 8000 }]
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+          readinessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 15, periodSeconds: 10 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: ingestion, namespace: disaster }
+spec: { selector: { app: ingestion }, ports: [{ port: 8000, targetPort: 8000 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: prediction, namespace: disaster }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: prediction } }
+  template:
+    metadata: { labels: { app: prediction } }
+    spec:
+      containers:
+        - name: prediction
+          image: disaster/prediction:latest
+          imagePullPolicy: IfNotPresent
+          envFrom: [{ configMapRef: { name: app-config } }]
+          ports: [{ containerPort: 8000 }]
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+          readinessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 15, periodSeconds: 10 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: prediction, namespace: disaster }
+spec: { selector: { app: prediction }, ports: [{ port: 8000, targetPort: 8000 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: damage, namespace: disaster }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: damage } }
+  template:
+    metadata: { labels: { app: damage } }
+    spec:
+      containers:
+        - name: damage
+          image: disaster/damage:latest
+          imagePullPolicy: IfNotPresent
+          envFrom: [{ configMapRef: { name: app-config } }]
+          ports: [{ containerPort: 8000 }]
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+          readinessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 15, periodSeconds: 10 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: damage, namespace: disaster }
+spec: { selector: { app: damage }, ports: [{ port: 8000, targetPort: 8000 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: resource, namespace: disaster }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: resource } }
+  template:
+    metadata: { labels: { app: resource } }
+    spec:
+      containers:
+        - name: resource
+          image: disaster/resource:latest
+          imagePullPolicy: IfNotPresent
+          envFrom: [{ configMapRef: { name: app-config } }]
+          ports: [{ containerPort: 8000 }]
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+          readinessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 15, periodSeconds: 10 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: resource, namespace: disaster }
+spec: { selector: { app: resource }, ports: [{ port: 8000, targetPort: 8000 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: alert, namespace: disaster }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: alert } }
+  template:
+    metadata: { labels: { app: alert } }
+    spec:
+      containers:
+        - name: alert
+          image: disaster/alert:latest
+          imagePullPolicy: IfNotPresent
+          envFrom: [{ configMapRef: { name: app-config } }]
+          ports: [{ containerPort: 8000 }]
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+          readinessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 15, periodSeconds: 10 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: alert, namespace: disaster }
+spec: { selector: { app: alert }, ports: [{ port: 8000, targetPort: 8000 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: gateway, namespace: disaster }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: gateway } }
+  template:
+    metadata: { labels: { app: gateway } }
+    spec:
+      containers:
+        - name: gateway
+          image: disaster/gateway:latest
+          imagePullPolicy: IfNotPresent
+          envFrom: [{ configMapRef: { name: app-config } }]
+          ports: [{ containerPort: 8000 }]
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+          readinessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 5, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /health, port: 8000 }, initialDelaySeconds: 15, periodSeconds: 10 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: gateway, namespace: disaster }
+spec: { selector: { app: gateway }, ports: [{ port: 8000, targetPort: 8000 }] }

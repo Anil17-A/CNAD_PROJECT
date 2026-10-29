@@ -1,0 +1,12 @@
+# Docker-free local mode (VS Code): pip install -r requirements-local.txt
+fastapi
+uvicorn[standard]
+httpx
+pulp==2.8.0
+networkx
+numpy
+pytest
+# optional, only for ml/ scripts
+pandas
+scikit-learn
+xgboost

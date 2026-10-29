@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+ml/data/*
+ml/models/*
+!ml/data/.gitkeep
+!ml/models/.gitkeep
+.pytest_cache/
+.venv/
